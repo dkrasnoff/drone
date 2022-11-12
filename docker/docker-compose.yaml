@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  postgres-db:
+    image: postgres:13.5
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: drone_communication

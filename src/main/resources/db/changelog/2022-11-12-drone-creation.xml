@@ -1,0 +1,26 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-drone-table" author="d.krasnov">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="drone"/>
+            </not>
+        </preConditions>
+        <createTable tableName="drone">
+            <column name="id" type="VARCHAR(100)">
+                <constraints primaryKey="true"
+                             unique="true"
+                             primaryKeyName="drone_id_pkey"/>
+            </column>
+            <column name="model" type="VARCHAR(20)"/>
+            <column name="weight_limit" type="SMALLINT"/>
+            <column name="battery_capacity" type="TINYINT"/>
+            <column name="state" type="VARCHAR(20)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
