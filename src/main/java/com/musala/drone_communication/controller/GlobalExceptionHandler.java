@@ -1,5 +1,6 @@
 package com.musala.drone_communication.controller;
 
+import com.musala.drone_communication.exception.DroneNotFoundException;
 import com.musala.drone_communication.exception.DuplicateDroneException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -40,6 +41,13 @@ public class GlobalExceptionHandler {
             DuplicateDroneException ex) {
 
         return String.format("Drone with id %s already exists", ex.getSerialNumber());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DroneNotFoundException.class)
+    @ResponseBody
+    public String handleValidationExceptions(DroneNotFoundException ex) {
+        return ex.getMessage();
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

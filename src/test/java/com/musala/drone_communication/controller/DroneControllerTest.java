@@ -1,20 +1,27 @@
 package com.musala.drone_communication.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.musala.drone_communication.dto.api.available.AvailableDroneResp;
+import com.musala.drone_communication.dto.api.battery.DroneBatteryCapacityResp;
 import com.musala.drone_communication.dto.api.register.DroneRegisteringResp;
 import com.musala.drone_communication.dto.api.register.DroneRegistrationReq;
 import com.musala.drone_communication.enums.DroneModel;
 import com.musala.drone_communication.enums.DroneState;
+import com.musala.drone_communication.external.MockedCheckBatteryClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import java.util.List;
 import java.util.Map;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureMockMvc
@@ -28,8 +35,11 @@ class DroneControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @MockBean
+    private MockedCheckBatteryClient checkBatteryClient;
+
     @Test
-    public void checkRegisterNewDroneTest() throws Exception {
+    public void registerNewDroneTest() throws Exception {
         final var registrationRequest = DroneRegistrationReq.builder()
                 .serialNumber("Serial Number 1")
                 .state(DroneState.IDLE)
@@ -50,7 +60,7 @@ class DroneControllerTest {
     }
 
     @Test
-    public void checkRegisterNewDroneBadRequestTest() throws Exception {
+    public void registerNewDroneBadRequestTest() throws Exception {
         final var registrationRequest =
                 DroneRegistrationReq.builder()
                         .serialNumber("")
@@ -75,7 +85,7 @@ class DroneControllerTest {
     }
 
     @Test
-    public void checkRegisterExistedDroneBadRequestTest() throws Exception {
+    public void registerExistedDroneBadRequestTest() throws Exception {
         final var registrationRequest =
                 DroneRegistrationReq.builder()
                         .serialNumber("Serial Number 1")
@@ -98,6 +108,58 @@ class DroneControllerTest {
 
         Assertions.assertEquals(
                 "Drone with id Serial Number 1 already exists", stringResult);
+    }
+
+    @Sql(scripts = "classpath:/db/drones/available/get_available_drone_test.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    public void getAvailableDroneTest() throws Exception {
+        final var stringResult = mockMvc.perform(MockMvcRequestBuilders.get("/drones/available"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        final var result =
+                objectMapper.readValue(stringResult, AvailableDroneResp.class);
+
+        final var expectedResult = AvailableDroneResp.builder()
+                .drones(
+                        List.of(
+                                AvailableDroneResp.Drone.builder()
+                                        .serialNumber("Serial Number 1")
+                                        .build(),
+                                AvailableDroneResp.Drone.builder()
+                                        .serialNumber("Serial Number 5")
+                                        .build()))
+                .build();
+
+        Assertions.assertEquals(expectedResult, result);
+    }
+
+    @Sql(scripts = "classpath:/db/drones/battery/check_battery_level_test.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    public void checkDroneBatteryLevelTest() throws Exception {
+
+        when(checkBatteryClient.checkBattery("Serial Number 1")).thenReturn((byte) 1);
+
+        final var stringResult = mockMvc.perform(MockMvcRequestBuilders.get("/drones/battery")
+                        .param("id", "Serial Number 1"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        final var result =
+                objectMapper.readValue(stringResult, DroneBatteryCapacityResp.class);
+
+        final var expectedResult = DroneBatteryCapacityResp
+                .builder()
+                .capacity((byte) 1)
+                .build();
+
+        Assertions.assertEquals(expectedResult, result);
     }
 
     private static DroneRegisteringResp createDefaultRegistrationResponse() {
