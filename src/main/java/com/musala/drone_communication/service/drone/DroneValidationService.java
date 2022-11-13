@@ -1,8 +1,9 @@
-package com.musala.drone_communication.service;
+package com.musala.drone_communication.service.drone;
 
 import com.musala.drone_communication.dto.service.LoadingDroneDto;
 import com.musala.drone_communication.dto.service.MedicationDto;
 import com.musala.drone_communication.enums.DroneState;
+import com.musala.drone_communication.exception.DroneIsNotEnoughChargedException;
 import com.musala.drone_communication.exception.DroneOverloadException;
 import com.musala.drone_communication.exception.WrongDroneStateException;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class DroneValidationService {
 
     private static void checkDroneBatteryLevel(LoadingDroneDto loadingDroneDto) {
         if (loadingDroneDto.getDroneDto().getBatteryCapacity() < MIN_BATTERY_CAPACITY_FOR_LOADING) {
-            throw new DroneIsNotEnoughChargedExeption(loadingDroneDto.getDroneDto());
+            throw new DroneIsNotEnoughChargedException(loadingDroneDto.getDroneDto());
         }
     }
 

@@ -1,10 +1,11 @@
-package com.musala.drone_communication.service;
+package com.musala.drone_communication.service.drone;
 
 import com.musala.drone_communication.dao.repository.DroneRepository;
 import com.musala.drone_communication.dao.repository.MedicationRepository;
 import com.musala.drone_communication.dto.service.DroneDto;
 import com.musala.drone_communication.dto.service.LoadingDroneDto;
 import com.musala.drone_communication.dto.service.MedicationDto;
+import com.musala.drone_communication.enums.DroneState;
 import com.musala.drone_communication.exception.DroneNotFoundException;
 import com.musala.drone_communication.mapper.DroneMapper;
 import com.musala.drone_communication.mapper.MedicationMapper;
@@ -12,9 +13,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import static com.musala.drone_communication.service.drone.DroneValidationService.MIN_BATTERY_CAPACITY_FOR_LOADING;
 
 /**
  * This service provides loading operation with drones
@@ -62,9 +65,21 @@ public class DroneLoadingService {
                                     medicationDto -> medications.get(medicationDto.getCode())));
             droneValidationService.checkBeforeLoading(loadingDroneDto, medicationsToLoad);
             updateDroneLoadedMedication(medicationsToLoad, loadingDroneDto);
+            // todo save to db
             return (short) (loadingDroneDto.getDroneDto().getWeightLimit() -
                     loadingDroneDto.getCurrentLoadedWeight().shortValue());
         }
+    }
+
+    /**
+     * Method searches for all available for loading drones
+     *
+     * @return list of available for loading drones
+     */
+    public List<DroneDto> getAvailableDrones() {
+        return droneMapper.mapToServiceDtoList(
+                droneRepository.findAllByStateIsAndBatteryCapacityGreaterThanEqual(
+                        DroneState.IDLE, MIN_BATTERY_CAPACITY_FOR_LOADING));
     }
 
     /**
@@ -75,6 +90,17 @@ public class DroneLoadingService {
      */
     public Map<MedicationDto, Integer> getLoadedInDroneMedication(String droneId) {
         return LOADING_DRONES.get(droneId).getLoadedMedication();
+    }
+
+    public void updateLoadingDrone(DroneDto updatedDrone) {
+        synchronized (LOADING_DRONES) {
+            if (LOADING_DRONES.containsKey(updatedDrone.getSerialNumber())) {
+                final var loadingDroneDto = LOADING_DRONES.get(updatedDrone.getSerialNumber());
+                synchronized (loadingDroneDto) {
+                    loadingDroneDto.setDroneDto(updatedDrone);
+                }
+            }
+        }
     }
 
     private static void updateDroneLoadedMedication(Map<MedicationDto, Integer> medicationsToLoad,

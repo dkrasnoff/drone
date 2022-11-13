@@ -1,0 +1,35 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-drone-battery-history-table" author="d.krasnov">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="drone_battery_history"/>
+            </not>
+        </preConditions>
+        <createTable tableName="drone_battery_history">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"
+                             unique="true"
+                             primaryKeyName="drone_battery_history_id_pkey"/>
+            </column>
+            <column name="drone_id" type="VARCHAR(100)"/>
+            <column name="battery_capacity" type="TINYINT"/>
+            <column name="mutation_date" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create-drone-batter-history-drone_id-mutation_date-index" author="d.krasnov">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="drone_battery_history" columnName="drone_id"/>
+            <columnExists tableName="drone_battery_history" columnName="mutation_date"/>
+        </preConditions>
+        <createIndex tableName="drone_battery_history" indexName="dbh_drone_id_mutation_date_idx">
+            <column name="drone_id"/>
+            <column name="mutation_date"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -6,4 +6,5 @@
 
     <include file="db/changelog/2022-11-12-drone-creation.xml"/>
     <include file="db/changelog/2022-11-13-medication-creation.xml"/>
+    <include file="db/changelog/2022-11-14-drone-battery-history.xml"/>
 </databaseChangeLog>

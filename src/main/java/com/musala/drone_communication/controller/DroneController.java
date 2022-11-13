@@ -9,8 +9,8 @@ import com.musala.drone_communication.dto.api.register.DroneRegisteringResp;
 import com.musala.drone_communication.dto.api.register.DroneRegistrationReq;
 import com.musala.drone_communication.mapper.DroneMapper;
 import com.musala.drone_communication.mapper.MedicationMapper;
-import com.musala.drone_communication.service.DroneLoadingService;
-import com.musala.drone_communication.service.DroneService;
+import com.musala.drone_communication.service.drone.DroneLoadingService;
+import com.musala.drone_communication.service.drone.DroneService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,14 +45,14 @@ public class DroneController {
     @GetMapping("/available")
     public AvailableDroneResp getAvailableDrones() {
         return AvailableDroneResp.builder()
-                .drones(droneMapper.mapToAvailableResp(droneService.getAvailableDrones()))
+                .drones(droneMapper.mapToAvailableResp(droneLoadingService.getAvailableDrones()))
                 .build();
     }
 
     @GetMapping("/battery")
-    public DroneBatteryCapacityResp getDroneBatteryCapacity(@RequestParam String id) {
+    public DroneBatteryCapacityResp getDroneBatteryLastLevel(@RequestParam String id) {
         return DroneBatteryCapacityResp.builder()
-                .capacity(droneService.checkDroneBattery(id))
+                .capacity(droneService.getDroneBatteryLastLevel(id))
                 .build();
     }
 
@@ -70,6 +70,7 @@ public class DroneController {
                 .build();
     }
 
+    // todo add test
     @GetMapping("/medications")
     public LoadedMedicationResp getLoadedMedications(@RequestParam @NotEmpty String droneId) {
         return medicationMapper.toLoadedMedicationResp(

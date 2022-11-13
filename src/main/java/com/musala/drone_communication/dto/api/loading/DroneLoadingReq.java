@@ -24,7 +24,7 @@ public class DroneLoadingReq {
     @Builder
     @Data
     public static class Medication {
-        @Pattern(regexp = "^[A-Za-z_\\-0-9]+$")
+        @Pattern(regexp = "^[A-Z_0-9]+$")
         private String code;
         private Integer count;
     }

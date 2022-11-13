@@ -21,4 +21,16 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="add_photo_path_column_to_medication_table" author="d.krasnov">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="medication"/>
+            <not>
+                <columnExists tableName="medication" columnName="photo_path"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="medication">
+            <column name="photo_path" type="varchar"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

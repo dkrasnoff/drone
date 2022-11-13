@@ -13,6 +13,9 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Size;
 import java.util.Objects;
 
 @Entity
@@ -24,21 +27,23 @@ import java.util.Objects;
 public class Drone {
 
     @Id
+    @Size(max = 100)
     @Column(name = "id")
     private String serialNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "model")
     private DroneModel model;
 
+    @Max(value = 500)
     @Column(name = "weight_limit")
     private short weightLimit;
 
+    @Min(0)
+    @Max(100)
     @Column(name = "battery_capacity")
     private byte batteryCapacity;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "state")
     private DroneState state;
 
     @Override
