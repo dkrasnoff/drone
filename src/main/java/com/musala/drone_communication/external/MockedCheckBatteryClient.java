@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
  * So for our needs this client generate random number from 0 to 25.
  */
 @Component
-public class MockedCheckBatteryClient {
+public class MockedCheckBatteryClient implements DroneCommunicationClient {
 
     public byte checkBattery(String id) {
         return (byte) (Math.random() * 100);

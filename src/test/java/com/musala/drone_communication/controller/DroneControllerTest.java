@@ -3,6 +3,8 @@ package com.musala.drone_communication.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.musala.drone_communication.dto.api.available.AvailableDroneResp;
 import com.musala.drone_communication.dto.api.battery.DroneBatteryCapacityResp;
+import com.musala.drone_communication.dto.api.loading.DroneLoadingReq;
+import com.musala.drone_communication.dto.api.loading.DroneLoadingResp;
 import com.musala.drone_communication.dto.api.register.DroneRegisteringResp;
 import com.musala.drone_communication.dto.api.register.DroneRegistrationReq;
 import com.musala.drone_communication.enums.DroneModel;
@@ -158,6 +160,60 @@ class DroneControllerTest {
                 .builder()
                 .capacity((byte) 1)
                 .build();
+
+        Assertions.assertEquals(expectedResult, result);
+    }
+
+    @Sql(scripts = "classpath:/db/drones/battery/check_battery_level_test.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    public void checkNotExistedDroneBatteryLevelTest() throws Exception {
+
+        when(checkBatteryClient.checkBattery("Serial Number 2")).thenReturn((byte) 1);
+
+        final var stringResult = mockMvc.perform(MockMvcRequestBuilders.get("/drones/battery")
+                        .param("id", "Serial Number 1"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Assertions.assertEquals("There is no drone with id=Serial Number 2", stringResult);
+    }
+
+    @Sql(scripts = "classpath:/db/drones/medication/load_medication_test.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+    @Test
+    public void loadMedicationTest() throws Exception {
+
+        final var request = DroneLoadingReq.builder()
+                .droneId("Serial Number 1")
+                .medications(
+                        List.of(
+                                DroneLoadingReq.Medication.builder()
+                                        .code("MEDICATION_1")
+                                        .count(5)
+                                        .build(),
+                                DroneLoadingReq.Medication.builder()
+                                        .code("MEDICATION_2")
+                                        .count(2)
+                                        .build()))
+                .build();
+
+        final var stringResult = mockMvc.perform(MockMvcRequestBuilders.post("/drones/load")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        final var result = objectMapper.readValue(stringResult, DroneLoadingResp.class);
+
+        final var expectedResult =
+                DroneLoadingResp.builder()
+                        .availableWeight((short) 200)
+                        .build();
 
         Assertions.assertEquals(expectedResult, result);
     }

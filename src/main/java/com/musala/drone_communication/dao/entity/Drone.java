@@ -2,7 +2,6 @@ package com.musala.drone_communication.dao.entity;
 
 import com.musala.drone_communication.enums.DroneModel;
 import com.musala.drone_communication.enums.DroneState;
-import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

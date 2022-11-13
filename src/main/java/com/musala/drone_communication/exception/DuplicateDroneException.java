@@ -2,12 +2,9 @@ package com.musala.drone_communication.exception;
 
 import lombok.Getter;
 
-@Getter
-public class DuplicateDroneException extends RuntimeException {
-
-    private final String serialNumber;
+public class DuplicateDroneException extends BaseBadRequestException {
 
     public DuplicateDroneException(String serialNumber) {
-        this.serialNumber = serialNumber;
+        super(String.format("Drone with id %s already exists", serialNumber));
     }
 }

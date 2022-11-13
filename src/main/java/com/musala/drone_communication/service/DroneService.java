@@ -5,13 +5,14 @@ import com.musala.drone_communication.dto.service.DroneDto;
 import com.musala.drone_communication.enums.DroneState;
 import com.musala.drone_communication.exception.DroneNotFoundException;
 import com.musala.drone_communication.exception.DuplicateDroneException;
-import com.musala.drone_communication.external.MockedCheckBatteryClient;
+import com.musala.drone_communication.external.DroneCommunicationClient;
 import com.musala.drone_communication.mapper.DroneMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import static com.musala.drone_communication.service.DroneValidationService.MIN_BATTERY_CAPACITY_FOR_LOADING;
 
 /**
  * This service provides base operations with registration drones
@@ -20,8 +21,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class DroneService {
 
-    public static final byte MIN_BATTERY_CAPACITY_FOR_LOADING = 25;
-    private final MockedCheckBatteryClient checkBatteryService;
+    private final DroneCommunicationClient droneCommunicationClient;
     private final DroneRepository droneRepository;
     private final DroneMapper droneMapper;
 
@@ -63,7 +63,7 @@ public class DroneService {
     public byte checkDroneBattery(String id) {
         final var droneOp = droneRepository.findById(id)
                 .orElseThrow(() -> new DroneNotFoundException("There is no registered drone with id=" + id));
-        final byte batteryLevel = checkBatteryService.checkBattery(id);
+        final byte batteryLevel = droneCommunicationClient.checkBattery(id);
         droneOp.setBatteryCapacity(batteryLevel);
         droneRepository.save(droneOp);
         return batteryLevel;
