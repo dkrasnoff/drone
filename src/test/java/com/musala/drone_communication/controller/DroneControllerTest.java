@@ -17,7 +17,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -28,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class DroneControllerTest {
 
     @Autowired
@@ -40,6 +38,8 @@ class DroneControllerTest {
     @MockBean
     private MockedCheckBatteryClient checkBatteryClient;
 
+    @Sql(scripts = "classpath:/db/clear_db.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     public void registerNewDroneTest() throws Exception {
         final var registrationRequest = DroneRegistrationReq.builder()
@@ -61,6 +61,8 @@ class DroneControllerTest {
         Assertions.assertEquals(createDefaultRegistrationResponse(), result);
     }
 
+    @Sql(scripts = "classpath:/db/clear_db.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     public void registerNewDroneBadRequestTest() throws Exception {
         final var registrationRequest =
@@ -86,6 +88,8 @@ class DroneControllerTest {
                 result);
     }
 
+    @Sql(scripts = "classpath:/db/clear_db.sql",
+            executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     public void registerExistedDroneBadRequestTest() throws Exception {
         final var registrationRequest =
@@ -112,7 +116,7 @@ class DroneControllerTest {
                 "Drone with id Serial Number 1 already exists", stringResult);
     }
 
-    @Sql(scripts = "classpath:/db/drones/available/get_available_drone_test.sql",
+    @Sql(scripts = {"classpath:/db/clear_db.sql", "classpath:/db/drones/available/get_available_drone_test.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     public void getAvailableDroneTest() throws Exception {
@@ -139,7 +143,7 @@ class DroneControllerTest {
         Assertions.assertEquals(expectedResult, result);
     }
 
-    @Sql(scripts = "classpath:/db/drones/battery/check_battery_level_test.sql",
+    @Sql(scripts = {"classpath:/db/clear_db.sql", "classpath:/db/drones/battery/check_battery_level_test.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     public void checkDroneBatteryLevelTest() throws Exception {
@@ -164,7 +168,7 @@ class DroneControllerTest {
         Assertions.assertEquals(expectedResult, result);
     }
 
-    @Sql(scripts = "classpath:/db/drones/battery/check_battery_level_test.sql",
+    @Sql(scripts = {"classpath:/db/clear_db.sql", "classpath:/db/drones/battery/check_battery_level_test.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     public void checkNotExistedDroneBatteryLevelTest() throws Exception {
@@ -172,16 +176,16 @@ class DroneControllerTest {
         when(checkBatteryClient.checkBattery("Serial Number 2")).thenReturn((byte) 1);
 
         final var stringResult = mockMvc.perform(MockMvcRequestBuilders.get("/drones/battery")
-                        .param("id", "Serial Number 1"))
-                .andExpect(status().isOk())
+                        .param("id", "Serial Number 2"))
+                .andExpect(status().isBadRequest())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
-        Assertions.assertEquals("There is no drone with id=Serial Number 2", stringResult);
+        Assertions.assertEquals("There is no registered drone with id=Serial Number 2", stringResult);
     }
 
-    @Sql(scripts = "classpath:/db/drones/medication/load_medication_test.sql",
+    @Sql(scripts = {"classpath:/db/clear_db.sql", "classpath:/db/drones/medication/load_medication_test.sql"},
             executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
     @Test
     public void loadMedicationTest() throws Exception {

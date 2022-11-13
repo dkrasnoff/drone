@@ -11,9 +11,7 @@ import com.musala.drone_communication.mapper.MedicationMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import javax.transaction.Transactional;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,6 +32,13 @@ public class DroneLoadingService {
     private final DroneMapper droneMapper;
     private final MedicationMapper medicationMapper;
 
+    /**
+     * Method loads given medication into the drone
+     *
+     * @param droneId     drone's id for loading
+     * @param medications medication with its amount
+     * @return available weight after loading
+     */
     public short loadDrone(String droneId, Map<String, Integer> medications) {
         LoadingDroneDto loadingDroneDto;
         synchronized (LOADING_DRONES) {
@@ -60,6 +65,16 @@ public class DroneLoadingService {
             return (short) (loadingDroneDto.getDroneDto().getWeightLimit() -
                     loadingDroneDto.getCurrentLoadedWeight().shortValue());
         }
+    }
+
+    /**
+     * Method checks loaded into the drone medications
+     *
+     * @param droneId drone's id
+     * @return loaded into given drone medication
+     */
+    public Map<MedicationDto, Integer> getLoadedInDroneMedication(String droneId) {
+        return LOADING_DRONES.get(droneId).getLoadedMedication();
     }
 
     private static void updateDroneLoadedMedication(Map<MedicationDto, Integer> medicationsToLoad,

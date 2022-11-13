@@ -4,6 +4,7 @@ import com.musala.drone_communication.dto.api.available.AvailableDroneResp;
 import com.musala.drone_communication.dto.api.battery.DroneBatteryCapacityResp;
 import com.musala.drone_communication.dto.api.loading.DroneLoadingReq;
 import com.musala.drone_communication.dto.api.loading.DroneLoadingResp;
+import com.musala.drone_communication.dto.api.loading.LoadedMedicationResp;
 import com.musala.drone_communication.dto.api.register.DroneRegisteringResp;
 import com.musala.drone_communication.dto.api.register.DroneRegistrationReq;
 import com.musala.drone_communication.mapper.DroneMapper;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -56,15 +58,21 @@ public class DroneController {
 
     @PostMapping("/load")
     public DroneLoadingResp loadDrone(@RequestBody DroneLoadingReq request) {
-        final var medicaitonMap = request.getMedications()
+        final var medicationMap = request.getMedications()
                 .stream()
                 .collect(Collectors.toMap(
                         DroneLoadingReq.Medication::getCode,
                         DroneLoadingReq.Medication::getCount,
                         Integer::sum));
-        short availableWeight = droneLoadingService.loadDrone(request.getDroneId(), medicaitonMap);
+        short availableWeight = droneLoadingService.loadDrone(request.getDroneId(), medicationMap);
         return DroneLoadingResp.builder()
                 .availableWeight(availableWeight)
                 .build();
+    }
+
+    @GetMapping("/medications")
+    public LoadedMedicationResp getLoadedMedications(@RequestParam @NotEmpty String droneId) {
+        return medicationMapper.toLoadedMedicationResp(
+                droneLoadingService.getLoadedInDroneMedication(droneId));
     }
 }
