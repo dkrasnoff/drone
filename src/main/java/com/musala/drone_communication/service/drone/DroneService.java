@@ -3,6 +3,8 @@ package com.musala.drone_communication.service.drone;
 import com.musala.drone_communication.dao.entity.Drone;
 import com.musala.drone_communication.dao.repository.DroneRepository;
 import com.musala.drone_communication.dto.service.DroneDto;
+import com.musala.drone_communication.enums.DroneState;
+import com.musala.drone_communication.exception.DroneIsNotEnoughChargedException;
 import com.musala.drone_communication.exception.DroneNotFoundException;
 import com.musala.drone_communication.external.DroneCommunicationClient;
 import com.musala.drone_communication.mapper.DroneMapper;
@@ -23,6 +25,7 @@ public class DroneService {
     private static final int BATCH_SIZE = 10;
 
     private final DroneTransactionalService droneTransactionalService;
+    private final DroneValidationService droneValidationService;
     private final DroneCommunicationClient droneCommunicationClient;
     private final DroneLoadingService droneLoadingService;
     private final DroneRepository droneRepository;
@@ -76,10 +79,18 @@ public class DroneService {
     }
 
     private Drone updateDroneBattery(Drone drone) {
-        final byte batteryLevel = droneCommunicationClient.checkBattery(drone.getSerialNumber());
+        final byte batteryLevel = droneCommunicationClient.getCurrentBatteryLevel(drone.getSerialNumber());
         drone.setBatteryCapacity(batteryLevel);
-        droneTransactionalService.updateDrone(drone);
-        droneLoadingService.updateLoadingDrone(droneMapper.mapToServiceDto(drone));
+        final var droneDto = droneMapper.mapToServiceDto(drone);
+        try {
+            droneValidationService.checkDroneBatteryLevel(droneDto);
+        } catch (DroneIsNotEnoughChargedException e) {
+            log.error(e.getMessage());
+            droneDto.setState(DroneState.IDLE);
+            droneLoadingService.stopDroneLoading(droneDto);
+        }
+        droneTransactionalService.updateDroneBattery(drone);
+        droneLoadingService.updateLoadingDrone(droneDto);
         return drone;
     }
 }

@@ -148,7 +148,7 @@ class DroneControllerTest {
     @Test
     public void checkDroneBatteryLevelTest() throws Exception {
 
-        when(checkBatteryClient.checkBattery("Serial Number 1")).thenReturn((byte) 1);
+        when(checkBatteryClient.getCurrentBatteryLevel("Serial Number 1")).thenReturn((byte) 1);
 
         final var stringResult = mockMvc.perform(MockMvcRequestBuilders.get("/drones/battery")
                         .param("id", "Serial Number 1"))
@@ -173,7 +173,7 @@ class DroneControllerTest {
     @Test
     public void checkNotExistedDroneBatteryLevelTest() throws Exception {
 
-        when(checkBatteryClient.checkBattery("Serial Number 2")).thenReturn((byte) 1);
+        when(checkBatteryClient.getCurrentBatteryLevel("Serial Number 2")).thenReturn((byte) 1);
 
         final var stringResult = mockMvc.perform(MockMvcRequestBuilders.get("/drones/battery")
                         .param("id", "Serial Number 2"))

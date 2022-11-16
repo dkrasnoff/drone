@@ -1,5 +1,7 @@
 package com.musala.drone_communication.service.drone;
 
+import com.musala.drone_communication.dao.entity.Drone;
+import com.musala.drone_communication.dto.service.DroneDto;
 import com.musala.drone_communication.dto.service.LoadingDroneDto;
 import com.musala.drone_communication.dto.service.MedicationDto;
 import com.musala.drone_communication.enums.DroneState;
@@ -26,25 +28,25 @@ public class DroneValidationService {
                                    Map<MedicationDto, Integer> medicationsToLoad) {
 
         checkDroneState(loadingDroneDto);
-        checkDroneBatteryLevel(loadingDroneDto);
+        checkDroneBatteryLevel(loadingDroneDto.getDroneDto());
         checkWeightLimit(loadingDroneDto, medicationsToLoad);
 
     }
 
-    private static void checkDroneState(LoadingDroneDto loadingDroneDto) {
+    public void checkDroneBatteryLevel(DroneDto droneDto) {
+        if (droneDto.getBatteryCapacity() < MIN_BATTERY_CAPACITY_FOR_LOADING) {
+            throw new DroneIsNotEnoughChargedException(droneDto);
+        }
+    }
+
+    private void checkDroneState(LoadingDroneDto loadingDroneDto) {
         if (!AVAILABLE_FOR_LOADING_STATES.contains(loadingDroneDto.getDroneDto().getState())) {
             throw new WrongDroneStateException("Drone can not be loading with state = " +
                     loadingDroneDto.getDroneDto().getState());
         }
     }
 
-    private static void checkDroneBatteryLevel(LoadingDroneDto loadingDroneDto) {
-        if (loadingDroneDto.getDroneDto().getBatteryCapacity() < MIN_BATTERY_CAPACITY_FOR_LOADING) {
-            throw new DroneIsNotEnoughChargedException(loadingDroneDto.getDroneDto());
-        }
-    }
-
-    private static void checkWeightLimit(LoadingDroneDto loadingDroneDto,
+    private void checkWeightLimit(LoadingDroneDto loadingDroneDto,
                                          Map<MedicationDto, Integer> medicationsToLoad) {
         final var medicationTotalWeight =
                 medicationsToLoad

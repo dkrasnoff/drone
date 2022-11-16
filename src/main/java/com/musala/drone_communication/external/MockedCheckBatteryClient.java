@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class MockedCheckBatteryClient implements DroneCommunicationClient {
 
-    public byte checkBattery(String id) {
+    public byte getCurrentBatteryLevel(String id) {
         log.info("Checking drone's battery, id={}", id);
         return (byte) (Math.random() * 100);
     }

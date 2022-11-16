@@ -6,15 +6,19 @@ import com.musala.drone_communication.dto.service.DroneDto;
 import com.musala.drone_communication.dto.service.LoadingDroneDto;
 import com.musala.drone_communication.dto.service.MedicationDto;
 import com.musala.drone_communication.enums.DroneState;
+import com.musala.drone_communication.exception.DroneIsNotEnoughChargedException;
 import com.musala.drone_communication.exception.DroneNotFoundException;
 import com.musala.drone_communication.mapper.DroneMapper;
 import com.musala.drone_communication.mapper.MedicationMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import static com.musala.drone_communication.service.drone.DroneValidationService.MIN_BATTERY_CAPACITY_FOR_LOADING;
@@ -27,7 +31,7 @@ import static com.musala.drone_communication.service.drone.DroneValidationServic
 @Slf4j
 public class DroneLoadingService {
 
-    private static final Map<String, LoadingDroneDto> LOADING_DRONES = new HashMap<>();
+    private static final Map<String, LoadingDroneDto> LOADING_DRONES = new ConcurrentHashMap<>();
 
     private final DroneValidationService droneValidationService;
     private final MedicationRepository medicationRepository;
@@ -63,9 +67,14 @@ public class DroneLoadingService {
                             .collect(Collectors.toMap(
                                     Function.identity(),
                                     medicationDto -> medications.get(medicationDto.getCode())));
-            droneValidationService.checkBeforeLoading(loadingDroneDto, medicationsToLoad);
+            try {
+                droneValidationService.checkBeforeLoading(loadingDroneDto, medicationsToLoad);
+            } catch (DroneIsNotEnoughChargedException e) {
+                stopDroneLoading(e.getDroneDto());
+                throw e;
+            }
+
             updateDroneLoadedMedication(medicationsToLoad, loadingDroneDto);
-            // todo save to db
             return (short) (loadingDroneDto.getDroneDto().getWeightLimit() -
                     loadingDroneDto.getCurrentLoadedWeight().shortValue());
         }
@@ -89,7 +98,9 @@ public class DroneLoadingService {
      * @return loaded into given drone medication
      */
     public Map<MedicationDto, Integer> getLoadedInDroneMedication(String droneId) {
-        return LOADING_DRONES.get(droneId).getLoadedMedication();
+        return Optional.ofNullable(LOADING_DRONES.get(droneId))
+                .map(LoadingDroneDto::getLoadedMedication)
+                .orElse(Collections.emptyMap());
     }
 
     public void updateLoadingDrone(DroneDto updatedDrone) {
@@ -103,8 +114,16 @@ public class DroneLoadingService {
         }
     }
 
-    private static void updateDroneLoadedMedication(Map<MedicationDto, Integer> medicationsToLoad,
-                                                    LoadingDroneDto loadingDroneDto) {
+    /**
+     * Method stops drone's loading
+     */
+    public void stopDroneLoading(DroneDto droneDto) {
+        LOADING_DRONES.remove(droneDto.getSerialNumber());
+        droneRepository.setDroneState(droneDto.getSerialNumber(), DroneState.IDLE);
+    }
+
+    private void updateDroneLoadedMedication(Map<MedicationDto, Integer> medicationsToLoad,
+                                             LoadingDroneDto loadingDroneDto) {
         final var loadedMedication = loadingDroneDto.getLoadedMedication();
         medicationsToLoad
                 .forEach((key, value) -> {
@@ -114,5 +133,9 @@ public class DroneLoadingService {
                         loadedMedication.put(key, value);
                     }
                 });
+        if(loadingDroneDto.getDroneDto().getState() != DroneState.LOADING) {
+            loadingDroneDto.getDroneDto().setState(DroneState.LOADING);
+            droneRepository.setDroneState(loadingDroneDto.getDroneDto().getSerialNumber(), DroneState.LOADING);
+        }
     }
 }

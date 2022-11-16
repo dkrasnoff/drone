@@ -1,7 +1,6 @@
 package com.musala.drone_communication.service.drone;
 
 import com.musala.drone_communication.dao.entity.Drone;
-import com.musala.drone_communication.dao.entity.DroneBatteryHistory;
 import com.musala.drone_communication.dao.repository.DroneBatteryHistoryRepository;
 import com.musala.drone_communication.dao.repository.DroneRepository;
 import com.musala.drone_communication.dto.service.DroneDto;
@@ -29,9 +28,8 @@ public class DroneTransactionalService implements TransactionalService {
                 .map(droneRepository::save);
     }
 
-    public void updateDrone(Drone drone) {
-        droneRepository.save(drone);
-        final var droneBatteryHistory = droneMapper.mapToDroneBatteryHistory(drone);
-        droneBatteryHistoryRepository.save(droneBatteryHistory);
+    public void updateDroneBattery(Drone drone) {
+        droneRepository.setDroneBatteryCapacity(drone.getSerialNumber(), drone.getBatteryCapacity());
+        droneBatteryHistoryRepository.save(droneMapper.mapToDroneBatteryHistory(drone));
     }
 }

@@ -70,7 +70,6 @@ public class DroneController {
                 .build();
     }
 
-    // todo add test
     @GetMapping("/medications")
     public LoadedMedicationResp getLoadedMedications(@RequestParam @NotEmpty String droneId) {
         return medicationMapper.toLoadedMedicationResp(

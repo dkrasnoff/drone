@@ -11,5 +11,5 @@ public interface DroneCommunicationClient {
      * @param id drone's id
      * @return actual battery level
      */
-    byte checkBattery(String id);
+    byte getCurrentBatteryLevel(String id);
 }
