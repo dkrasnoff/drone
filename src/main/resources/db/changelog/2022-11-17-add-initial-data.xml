@@ -1,0 +1,66 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="init-drone-table" author="d.krasnov">
+        <preConditions>
+            <tableExists tableName="drone"/>
+        </preConditions>
+        <insert tableName="drone">
+            <column name="id" value="Drone with SN1"/>
+            <column name="model" value="LIGHTWEIGHT"/>
+            <column name="weight_limit" value="100"/>
+            <column name="battery_capacity" value="100"/>
+            <column name="STATE" value="IDLE"/>
+        </insert>
+        <insert tableName="drone">
+            <column name="id" value="Drone with SN2"/>
+            <column name="model" value="MIDDLEWEIGHT"/>
+            <column name="weight_limit" value="200"/>
+            <column name="battery_capacity" value="100"/>
+            <column name="STATE" value="IDLE"/>
+        </insert>
+        <insert tableName="drone">
+            <column name="id" value="Drone with SN3"/>
+            <column name="model" value="CRUISERWEIGHT"/>
+            <column name="weight_limit" value="350"/>
+            <column name="battery_capacity" value="100"/>
+            <column name="STATE" value="IDLE"/>
+        </insert>
+        <insert tableName="drone">
+            <column name="id" value="Drone with SN4"/>
+            <column name="model" value="HEAVYWEIGHT"/>
+            <column name="weight_limit" value="500"/>
+            <column name="battery_capacity" value="100"/>
+            <column name="STATE" value="IDLE"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="init-medication-table" author="d.krasnov">
+        <preConditions>
+            <tableExists tableName="medication"/>
+        </preConditions>
+        <insert tableName="medication">
+            <column name="code" value="MEDICATION_1"/>
+            <column name="name" value="light medication"/>
+            <column name="weight" value="20"/>
+        </insert>
+        <insert tableName="medication">
+            <column name="code" value="MEDICATION_2"/>
+            <column name="name" value="medium medication"/>
+            <column name="weight" value="100"/>
+        </insert>
+        <insert tableName="medication">
+            <column name="code" value="MEDICATION_3"/>
+            <column name="name" value="heavy medication"/>
+            <column name="weight" value="500"/>
+        </insert>
+        <insert tableName="medication">
+            <column name="code" value="MEDICATION_4"/>
+            <column name="name" value="giant medication"/>
+            <column name="weight" value="1000"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
